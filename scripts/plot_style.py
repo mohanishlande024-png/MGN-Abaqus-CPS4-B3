@@ -77,6 +77,8 @@ def use_arial(extra_dirs=(), quiet=False):
         "mathtext.rm": family,
         "mathtext.it": family + ":italic",
         "mathtext.bf": family + ":bold",
+        "mathtext.cal": family,                  # no "cursive font not found" messages
+        "mathtext.sf": family,
         "axes.unicode_minus": True,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,

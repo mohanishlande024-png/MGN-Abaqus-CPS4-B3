@@ -78,6 +78,7 @@ from mgn.dataset import Case, _read_name, build_topology, load_dataset   # noqa:
 from mgn.augmented_trainer import AugMGN                                  # noqa: E402
 from mgn.anchor_trainer import AnchorMGN                                  # noqa: E402
 from mgn.kt_trainer import KtMGN, kt_targets                              # noqa: E402
+from mgn.scp_trainer import ScpKtMGN, check_version as check_scp_version  # noqa: E402
 
 FONT = plot_style.use_arial()
 
@@ -134,16 +135,19 @@ def snapshot(path):
 
 
 def model_kind(ck):
-    """'b2' (Kt target), 'b1' (anchors) or 'aug' (plain edge-augmented) from a checkpoint."""
+    """'b3' (SCP features, Kt target), 'b2' (Kt target), 'b1' (anchors) or 'aug' (plain edge-augmented)."""
     if isinstance(ck, dict) and "model_state_dict" in ck:
-        return "b2" if "b2" in ck else "b1" if "b1" in ck else "aug"
+        return "b3" if "b3" in ck else "b2" if "b2" in ck else "b1" if "b1" in ck else "aug"
     cfg = ck.get("config", {}) if isinstance(ck, dict) else {}
+    if cfg.get("features") == "scp":
+        return "b3"
     if cfg.get("target") == "kt":
         return "b2"
     return "b1" if "anchors" in cfg else "aug"
 
 
-KIND_TEXT = {"b2": "Run B2 (Kt target)", "b1": "Run B1", "aug": "edge-augmented MGN"}
+KIND_TEXT = {"b3": "Run B3 (SCP features, Kt target)", "b2": "Run B2 (Kt target)", "b1": "Run B1",
+             "aug": "edge-augmented MGN"}
 
 
 def load_model(a):
@@ -158,7 +162,10 @@ def load_model(a):
         cases, aug = None, None
 
     if isinstance(ck, dict) and "model_state_dict" in ck:          # multi_geometry_mgn.pt
-        mgn = {"b2": KtMGN, "b1": AnchorMGN, "aug": AugMGN}[kind].load(snap)
+        try:
+            mgn = {"b3": ScpKtMGN, "b2": KtMGN, "b1": AnchorMGN, "aug": AugMGN}[kind].load(snap)
+        except ValueError as exc:
+            sys.exit(str(exc).replace(snap, a.ckpt))
         desc = "final model (%d epochs), %s" % (len(ck.get("train_losses", [])), KIND_TEXT[kind])
         return mgn, desc, train_loads
 
@@ -174,12 +181,18 @@ def load_model(a):
     cfg = ck.get("config", {}) if isinstance(ck, dict) else {}
 
     print("rebuilding the normalisation from %s (%d training cases, %s) ..."
-          % (a.train_data, len(cases), "target Kt = stress / load" if kind == "b2" else "target stress"))
-    y = kt_targets(cases) if kind == "b2" else np.concatenate([c.von_mises for c in cases])
+          % (a.train_data, len(cases), "target Kt = stress / load" if kind in ("b2", "b3") else "target stress"))
+    y = kt_targets(cases) if kind in ("b2", "b3") else np.concatenate([c.von_mises for c in cases])
     kw = dict(num_layers=cfg.get("layers", a.layers), hidden_channels=cfg.get("hidden", a.hidden),
               embedding_dim=cfg.get("embedding", a.embedding), learning_rate=1e-5, epochs=1,
               global_features=["load"], aug_perc=aug["aug_perc"], aug_seed=aug["aug_seed"])
-    if kind == "b2":
+    if kind == "b3":
+        try:
+            check_scp_version(cfg.get("anchor_params"), a.ckpt)
+        except ValueError as exc:
+            sys.exit(str(exc))
+        mgn = ScpKtMGN(anchors=cfg["anchors"], redraw=cfg["redraw"], load_input=cfg.get("load_input", True), **kw)
+    elif kind == "b2":
         mgn = KtMGN(anchors=cfg["anchors"], redraw=cfg["redraw"], load_input=cfg.get("load_input", True), **kw)
     elif kind == "b1":
         mgn = AnchorMGN(anchors=cfg["anchors"], redraw=cfg["redraw"], **kw)
@@ -200,7 +213,7 @@ def load_model(a):
     mgn._model.eval()
     mgn._train_fem = None                     # free the training cases
     extra = ""
-    if kind == "b2":
+    if kind in ("b2", "b3"):
         extra = ", load input %s" % ("on" if cfg.get("load_input", True) else "OFF")
     desc = "best weights: epoch %s, training loss %.3e, %s%s" % (epoch, loss, KIND_TEXT[kind], extra)
     return mgn, desc, train_loads
