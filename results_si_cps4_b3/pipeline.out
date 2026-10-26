@@ -1,0 +1,710 @@
+
+==================================================================================
+2026-10-25 13:58   B3 PIPELINE   epochs <= 5000, dpi 300, draws 8, scatter loads: test
+==================================================================================
+
+==================================================================================
+2026-10-25 13:58   1/5  SCP check before training
+==================================================================================
+SCP features version 3 - check before training (45 geometries)
+set            geometry     FE peak   edge_Kt @peak     error
+train          E_H6            1.42            1.33       -6%
+train          E_H4            1.59            1.50       -6%
+train          E_H2p5          1.91            1.80       -6%
+train          E_H2            2.13            2.00       -6%
+train          R_H12           2.47            3.29      +33%
+train          E_H1p25         2.78            2.60       -6%
+train          R_H20           2.95            4.05      +37%
+train          E_H1            3.22            3.00       -7%
+train          R_H32           3.51            4.70      +34%
+train          E_V1p25         3.77            3.49       -7%
+train          R_H40           3.86            5.37      +39%
+train          R_H56           4.51            5.90      +31%
+train          R_W64           4.81            6.52      +36%
+train          R_W56           4.88            5.78      +19%
+train          P6              5.00            6.03      +21%
+train          R_W40           5.07            6.50      +28%
+train          P10             5.07            6.33      +25%
+train          P8              5.19            6.12      +18%
+train          R_W32           5.20            5.80      +12%
+train          R_W20           5.51            6.57      +19%
+train          E_V2            5.54            4.94      -11%
+train          R_W12           5.96            5.70       -4%
+train          P9              6.15            7.42      +21%
+train          E_V2p5          6.81            5.92      -13%
+train          P5              7.70            7.17       -7%
+train          E_V4           11.02            8.85      -20%
+train          E_V6           17.94           12.77      -29%
+unseen_extrap  E_H8            1.45           -1.00      -31%
+unseen_extrap  R_H8            2.19            2.91      +33%
+unseen_extrap  R_W8            6.66            6.60       -1%
+unseen_extrap  P3              7.31            6.48      -11%
+unseen_extrap  E_V8           27.16           16.70      -39%
+unseen_interp  E_H5            1.49            1.40       -6%
+unseen_interp  E_H1p5          2.49            2.34       -6%
+unseen_interp  R_H16           2.73            3.77      +38%
+unseen_interp  R_H48           4.19            5.68      +35%
+unseen_interp  E_V1p5          4.31            3.97       -8%
+unseen_interp  R_W48           4.92            5.46      +11%
+unseen_interp  R_W16           5.74            6.50      +13%
+unseen_interp  P7              6.85            7.35       +7%
+unseen_interp  E_V5           14.26           10.82      -24%
+val            E_H3            1.77            1.67       -6%
+val            R_H24           3.15            4.35      +38%
+val            R_W24           5.37            6.56      +22%
+val            E_V3            8.13            6.89      -15%
+
+|edge_Kt| at the FE peak vs FE peak Kt:  r (log) = 0.946,  median |error| = 18 %   (all 45 geometries)
+                                      r (log) = 0.943,  median |error| = 19 %   (the 27 training shapes)
+Kt_here field vs FE field: median R2 = 0.405
+wrote results_si_cps4_b3/scp_check/scp_check.csv and scp_check.png
+
+==================================================================================
+2026-10-25 13:58   2/5  training 
+==================================================================================
+/home/guest1/B3/scripts/train_b2_val.py:87: UserWarning: Reading `.npy` or `.npz` file required additional header parsing as it was created on Python 2. Save the file again to speed up loading and avoid this warning.
+  coords = d["coords"].astype(np.float32)
+/home/guest1/B3/scripts/train_b2_val.py:90: UserWarning: Reading `.npy` or `.npz` file required additional header parsing as it was created on Python 2. Save the file again to speed up loading and avoid this warning.
+  ei, nt, fl = build_topology(coords, d["tris"].astype(np.int64), name,
+/home/guest1/B3/scripts/train_b2_val.py:95: UserWarning: Reading `.npy` or `.npz` file required additional header parsing as it was created on Python 2. Save the file again to speed up loading and avoid this warning.
+  von_mises=d["mises"].astype(np.float32), metadata={"load": float(d["load"])},
+MGN using: cuda
+==============================================================================
+MGN TRAINING - RUN B3 (SCP FEATURES + Kt TARGET + REGULARISATION) WITH VALIDATION
+==============================================================================
+training       540 graphs  (27 shapes x 20 loads)  data/si_cps4/dataset_si_cps4_aug20.pt
+validation     80 graphs  (4 shapes: E_H3, E_V3, R_H24, R_W24)
+device         cuda  (NVIDIA RTX A4500)
+model          20 layers, hidden 64, Adam lr 1e-05, batch 1, SCP features in every layer, Kt target
+REGULARISATION
+  1 random edges   a fresh draw for EVERY graph every epoch (540 draws / epoch)
+  2 mesh jitter    interior nodes moved <= 5% of their shortest edge, target moved along
+  3 weight average EMA decay 0.9995 (~2000 steps = ~3.7 epochs); averaged weights are scored and saved
+  4 plateau        lr x 0.5 after 300 epochs without a better validation R2 (min 1e-06), stop after 1000
+  5 load input     OFF - Kt does not depend on the load
+results        results_si_cps4_b3   (at most 5000 epochs, R2 every 50)
+==============================================================================
+Node types found:
+  applied_load: 16660
+  fixed: 16660
+  free: 90240
+  hole: 65000
+  interior: 1944440
+  Total: 2133000
+
+SCP FEATURES (stress-concentration prior)  (edge_Kt = Kirsch-Inglis estimate of Kt on the hole edge)
+  geometry                    holes          a     2a/W  max edge_Kt
+  plate_si_E_H1                   1      32.00    0.256         3.00
+  plate_si_E_H1p25                1      28.62    0.229         2.60
+  plate_si_E_H2                   1      22.63    0.181         2.01
+  plate_si_E_H2p5                 1      20.24    0.162         1.89
+  plate_si_E_H4                   1      16.00    0.128         1.88
+  plate_si_E_H6                   1      13.06    0.105         1.98
+  plate_si_E_V1p25                1      35.78    0.286         3.49
+  plate_si_E_V2                   1      45.25    0.362         4.94
+  plate_si_E_V2p5                 1      50.60    0.405         5.92
+  plate_si_E_V4                   1      64.00    0.512         8.85
+  plate_si_E_V6                   1      78.38    0.627        12.77
+  plate_si_P10                    1      30.43    0.243         6.33
+  plate_si_P5                     1      28.59    0.229         7.17
+  plate_si_P6                     1      27.71    0.222         6.03
+  plate_si_P8                     1      29.56    0.237         6.22
+  plate_si_P9                     1      30.94    0.248         7.42
+  plate_si_R_H12                  1       6.00    0.048         3.36
+  plate_si_R_H20                  1      10.00    0.080         4.05
+  plate_si_R_H32                  1      16.00    0.128         4.87
+  plate_si_R_H40                  1      20.00    0.160         5.37
+  plate_si_R_H56                  1      28.00    0.224         6.11
+  plate_si_R_W12                  1      32.00    0.256         6.61
+  plate_si_R_W20                  1      32.00    0.256         6.57
+  plate_si_R_W32                  1      32.00    0.256         6.60
+  plate_si_R_W40                  1      32.00    0.256         6.50
+  plate_si_R_W56                  1      32.00    0.256         6.61
+  plate_si_R_W64                  1      32.00    0.256         6.52
+
+SCP FEATURES - VALIDATION SHAPES  (edge_Kt = Kirsch-Inglis estimate of Kt on the hole edge)
+  geometry                    holes          a     2a/W  max edge_Kt
+  plate_si_E_H3                   1      18.48    0.148         1.85
+  plate_si_E_V3                   1      55.43    0.443         6.89
+  plate_si_R_H24                  1      12.00    0.096         4.35
+  plate_si_R_W24                  1      32.00    0.256         6.56
+
+global inputs  load (zeroed), scp_sharpness, scp_facing, scp_edge_Kt, scp_near_hole, scp_near_tip, scp_Kt_here, scp_width_ratio
+parameters     593169
+preprocessing  6 s
+
+scoring the untrained model (epoch 0) ...
+   R2 at epoch 0:  train -0.0243   validation -0.0122  [raw -0.0122]   (gap -0.0121, lr 1e-05)  <- best, saved
+
+epoch      loss        elapsed     eta (at most)
+--------------------------------------------------------
+     1   0.829787   0h00m14s   19h50m51s
+    10   0.213348   0h02m20s   19h30m42s
+    20   0.142299   0h04m42s   19h33m25s
+    30   0.094123   0h07m04s   19h32m47s
+    40   0.065450   0h09m26s   19h31m17s
+    50   0.051264   0h11m45s   19h24m36s
+   R2 at epoch 50:  train 0.9355   validation 0.9584  [raw 0.9537]   (gap -0.0229, lr 1e-05)  <- best, saved
+    60   0.041838   0h14m08s   19h23m41s
+    70   0.037781   0h16m29s   19h20m57s
+    80   0.032359   0h18m48s   19h17m06s
+    90   0.029140   0h21m09s   19h14m35s
+   100   0.024927   0h23m29s   19h11m05s
+   R2 at epoch 100:  train 0.9720   validation 0.9873  [raw 0.9865]   (gap -0.0153, lr 1e-05)  <- best, saved
+   110   0.022240   0h25m50s   19h08m24s
+   120   0.019783   0h28m12s   19h07m10s
+   130   0.018769   0h30m35s   19h05m42s
+   140   0.015899   0h32m57s   19h03m50s
+   150   0.014932   0h35m17s   19h00m52s
+   R2 at epoch 150:  train 0.9845   validation 0.9926  [raw 0.9900]   (gap -0.0082, lr 1e-05)  <- best, saved
+   160   0.015356   0h37m38s   18h58m53s
+   170   0.011499   0h40m01s   18h57m08s
+   180   0.011890   0h42m23s   18h55m14s
+   190   0.012209   0h44m46s   18h53m30s
+   200   0.010370   0h47m06s   18h50m37s
+   R2 at epoch 200:  train 0.9900   validation 0.9945  [raw 0.9910]   (gap -0.0045, lr 1e-05)  <- best, saved
+   210   0.010032   0h49m29s   18h49m00s
+   220   0.008781   0h51m52s   18h47m16s
+   230   0.008975   0h54m15s   18h45m19s
+   240   0.008322   0h56m39s   18h43m46s
+   250   0.007944   0h58m58s   18h40m35s
+   R2 at epoch 250:  train 0.9929   validation 0.9954  [raw 0.9873]   (gap -0.0025, lr 1e-05)  <- best, saved
+   260   0.006685   1h01m19s   18h38m08s
+   270   0.006840   1h03m40s   18h35m38s
+   280   0.006565   1h06m00s   18h32m49s
+   290   0.006004   1h08m23s   18h30m49s
+   300   0.006530   1h10m44s   18h28m22s
+   R2 at epoch 300:  train 0.9946   validation 0.9961  [raw 0.9952]   (gap -0.0015, lr 1e-05)  <- best, saved
+   310   0.005623   1h13m06s   18h26m02s
+   320   0.005630   1h15m26s   18h23m13s
+   330   0.004924   1h17m46s   18h20m32s
+   340   0.004823   1h20m05s   18h17m42s
+   350   0.005477   1h22m26s   18h15m23s
+   R2 at epoch 350:  train 0.9958   validation 0.9966  [raw 0.9962]   (gap -0.0009, lr 1e-05)  <- best, saved
+   360   0.004296   1h24m47s   18h12m56s
+   370   0.004484   1h27m11s   18h11m01s
+   380   0.004255   1h29m29s   18h08m05s
+   390   0.004178   1h31m50s   18h05m39s
+   400   0.003935   1h34m10s   18h03m00s
+   R2 at epoch 400:  train 0.9965   validation 0.9972  [raw 0.9918]   (gap -0.0007, lr 1e-05)  <- best, saved
+   410   0.003614   1h36m29s   18h00m15s
+   420   0.003506   1h38m50s   17h57m45s
+   430   0.003245   1h41m10s   17h55m12s
+   440   0.003918   1h43m30s   17h52m42s
+   450   0.003684   1h45m50s   17h50m09s
+   R2 at epoch 450:  train 0.9970   validation 0.9975  [raw 0.9957]   (gap -0.0005, lr 1e-05)  <- best, saved
+   460   0.003005   1h48m09s   17h47m29s
+   470   0.003070   1h50m29s   17h44m59s
+   480   0.002964   1h52m50s   17h42m38s
+   490   0.002701   1h55m12s   17h40m21s
+   500   0.002997   1h57m34s   17h38m12s
+   R2 at epoch 500:  train 0.9975   validation 0.9978  [raw 0.9967]   (gap -0.0003, lr 1e-05)  <- best, saved
+   510   0.002888   1h59m55s   17h35m46s
+   520   0.002842   2h02m14s   17h33m11s
+   530   0.002574   2h04m34s   17h30m38s
+   540   0.002607   2h06m57s   17h28m34s
+   550   0.002639   2h09m18s   17h26m13s
+   R2 at epoch 550:  train 0.9978   validation 0.9980  [raw 0.9955]   (gap -0.0002, lr 1e-05)  <- best, saved
+   560   0.002271   2h11m42s   17h24m13s
+   570   0.002525   2h14m03s   17h21m56s
+   580   0.002190   2h16m24s   17h19m35s
+   590   0.002232   2h18m47s   17h17m21s
+   600   0.002326   2h21m09s   17h15m07s
+   R2 at epoch 600:  train 0.9980   validation 0.9982  [raw 0.9975]   (gap -0.0002, lr 1e-05)  <- best, saved
+   610   0.002234   2h23m30s   17h12m44s
+   620   0.002145   2h25m50s   17h10m18s
+   630   0.002114   2h28m11s   17h07m57s
+   640   0.002206   2h30m31s   17h05m29s
+   650   0.001988   2h32m49s   17h02m45s
+   R2 at epoch 650:  train 0.9982   validation 0.9983  [raw 0.9981]   (gap -0.0001, lr 1e-05)  <- best, saved
+   660   0.002114   2h35m11s   17h00m27s
+   670   0.001964   2h37m32s   16h58m06s
+   680   0.001856   2h39m53s   16h55m47s
+   690   0.001760   2h42m14s   16h53m24s
+   700   0.001871   2h44m34s   16h50m58s
+   R2 at epoch 700:  train 0.9984   validation 0.9984  [raw 0.9970]   (gap -0.0000, lr 1e-05)  <- best, saved
+   710   0.001720   2h46m54s   16h48m32s
+   720   0.001802   2h49m15s   16h46m11s
+   730   0.001623   2h51m36s   16h43m45s
+   740   0.001688   2h53m56s   16h41m21s
+   750   0.001542   2h56m14s   16h38m44s
+   R2 at epoch 750:  train 0.9985   validation 0.9985  [raw 0.9968]   (gap -0.0000, lr 1e-05)  <- best, saved
+   760   0.001535   2h58m34s   16h36m15s
+   770   0.001590   3h00m54s   16h33m48s
+   780   0.001410   3h03m13s   16h31m19s
+   790   0.001449   3h05m34s   16h28m58s
+   800   0.001658   3h07m56s   16h26m39s
+   R2 at epoch 800:  train 0.9987   validation 0.9986  [raw 0.9984]   (gap +0.0001, lr 1e-05)  <- best, saved
+   810   0.001532   3h10m16s   16h24m14s
+   820   0.001564   3h12m36s   16h21m51s
+   830   0.001472   3h14m59s   16h19m37s
+   840   0.001602   3h17m19s   16h17m15s
+   850   0.001597   3h19m39s   16h14m45s
+   R2 at epoch 850:  train 0.9987   validation 0.9986  [raw 0.9982]   (gap +0.0001, lr 1e-05)  <- best, saved
+   860   0.001385   3h22m00s   16h12m29s
+   870   0.001445   3h24m22s   16h10m13s
+   880   0.001161   3h26m42s   16h07m44s
+   890   0.001202   3h29m02s   16h05m19s
+   900   0.001256   3h31m21s   16h02m51s
+   R2 at epoch 900:  train 0.9988   validation 0.9987  [raw 0.9984]   (gap +0.0001, lr 1e-05)  <- best, saved
+   910   0.001267   3h33m44s   16h00m40s
+   920   0.001142   3h36m07s   15h58m26s
+   930   0.001317   3h38m28s   15h56m07s
+   940   0.001148   3h40m48s   15h53m43s
+   950   0.001145   3h43m09s   15h51m19s
+   R2 at epoch 950:  train 0.9989   validation 0.9987  [raw 0.9981]   (gap +0.0002, lr 1e-05)  <- best, saved
+   960   0.001256   3h45m31s   15h49m03s
+   970   0.001168   3h47m51s   15h46m39s
+   980   0.001288   3h50m10s   15h44m11s
+   990   0.001329   3h52m31s   15h41m50s
+  1000   0.001018   3h54m52s   15h39m28s
+   R2 at epoch 1000:  train 0.9990   validation 0.9988  [raw 0.9982]   (gap +0.0002, lr 1e-05)  <- best, saved
+  1010   0.001046   3h57m11s   15h37m02s
+  1020   0.001072   3h59m30s   15h34m32s
+  1030   0.000925   4h01m49s   15h32m03s
+  1040   0.000989   4h04m08s   15h29m37s
+  1050   0.001004   4h06m28s   15h27m12s
+   R2 at epoch 1050:  train 0.9990   validation 0.9988  [raw 0.9981]   (gap +0.0002, lr 1e-05)  <- best, saved
+  1060   0.000984   4h08m47s   15h24m45s
+  1070   0.001233   4h11m08s   15h22m25s
+  1080   0.001047   4h13m28s   15h20m02s
+  1090   0.000951   4h15m48s   15h17m37s
+  1100   0.001009   4h18m07s   15h15m11s
+   R2 at epoch 1100:  train 0.9991   validation 0.9989  [raw 0.9983]   (gap +0.0002, lr 1e-05)  <- best, saved
+  1110   0.000908   4h20m29s   15h12m55s
+  1120   0.000946   4h22m51s   15h10m36s
+  1130   0.001095   4h25m13s   15h08m20s
+  1140   0.001005   4h27m34s   15h05m59s
+  1150   0.000849   4h29m54s   15h03m35s
+   R2 at epoch 1150:  train 0.9991   validation 0.9989  [raw 0.9977]   (gap +0.0003, lr 1e-05)  <- best, saved
+  1160   0.000776   4h32m15s   15h01m15s
+  1170   0.000851   4h34m37s   14h58m58s
+  1180   0.000835   4h36m56s   14h56m32s
+  1190   0.000877   4h39m17s   14h54m11s
+  1200   0.001024   4h41m37s   14h51m50s
+   R2 at epoch 1200:  train 0.9992   validation 0.9989  [raw 0.9987]   (gap +0.0003, lr 1e-05)  <- best, saved
+  1210   0.000871   4h43m59s   14h49m32s
+  1220   0.000808   4h46m18s   14h47m06s
+  1230   0.000954   4h48m38s   14h44m42s
+  1240   0.000758   4h50m59s   14h42m20s
+  1250   0.000847   4h53m18s   14h39m56s
+   R2 at epoch 1250:  train 0.9992   validation 0.9989  [raw 0.9989]   (gap +0.0003, lr 1e-05)  <- best, saved
+  1260   0.001124   4h55m37s   14h37m30s
+  1270   0.000844   4h57m56s   14h35m04s
+  1280   0.000831   5h00m17s   14h32m43s
+  1290   0.000747   5h02m37s   14h30m21s
+  1300   0.000808   5h04m58s   14h28m00s
+   R2 at epoch 1300:  train 0.9993   validation 0.9989  [raw 0.9989]   (gap +0.0003, lr 1e-05)  <- best, saved
+  1310   0.000817   5h07m19s   14h25m39s
+  1320   0.000823   5h09m38s   14h23m15s
+  1330   0.000853   5h11m58s   14h20m52s
+  1340   0.000680   5h14m17s   14h18m27s
+  1350   0.000785   5h16m38s   14h16m05s
+   R2 at epoch 1350:  train 0.9993   validation 0.9989  [raw 0.9988]   (gap +0.0004, lr 1e-05)
+  1360   0.000652   5h18m59s   14h13m45s
+  1370   0.000731   5h21m19s   14h11m24s
+  1380   0.000710   5h23m41s   14h09m06s
+  1390   0.000657   5h26m03s   14h06m47s
+  1400   0.000644   5h28m23s   14h04m25s
+   R2 at epoch 1400:  train 0.9993   validation 0.9989  [raw 0.9977]   (gap +0.0004, lr 1e-05)
+  1410   0.000651   5h30m44s   14h02m06s
+  1420   0.000904   5h33m07s   13h59m50s
+  1430   0.000707   5h35m27s   13h57m29s
+  1440   0.000644   5h37m49s   13h55m10s
+  1450   0.000663   5h40m09s   13h52m47s
+   R2 at epoch 1450:  train 0.9994   validation 0.9990  [raw 0.9990]   (gap +0.0004, lr 1e-05)  <- best, saved
+  1460   0.000644   5h42m32s   13h50m32s
+  1470   0.000732   5h44m54s   13h48m15s
+  1480   0.000636   5h47m16s   13h45m56s
+  1490   0.000710   5h49m36s   13h43m35s
+  1500   0.000586   5h51m57s   13h41m14s
+   R2 at epoch 1500:  train 0.9994   validation 0.9990  [raw 0.9985]   (gap +0.0004, lr 1e-05)  <- best, saved
+  1510   0.000707   5h54m18s   13h38m52s
+  1520   0.000485   5h56m39s   13h36m33s
+  1530   0.000715   5h59m01s   13h34m14s
+  1540   0.000519   6h01m19s   13h31m49s
+  1550   0.000702   6h03m43s   13h29m33s
+   R2 at epoch 1550:  train 0.9994   validation 0.9990  [raw 0.9990]   (gap +0.0004, lr 1e-05)  <- best, saved
+  1560   0.000588   6h06m03s   13h27m13s
+  1570   0.000697   6h08m24s   13h24m51s
+  1580   0.000639   6h10m45s   13h22m31s
+  1590   0.000513   6h13m08s   13h20m15s
+  1600   0.000489   6h15m30s   13h17m56s
+   R2 at epoch 1600:  train 0.9994   validation 0.9990  [raw 0.9991]   (gap +0.0004, lr 1e-05)  <- best, saved
+   validation R2 flat for 300 epochs -> learning rate cut to 5e-06
+  1610   0.000375   6h17m53s   13h15m40s
+  1620   0.000343   6h20m12s   13h13m16s
+  1630   0.000356   6h22m32s   13h10m54s
+  1640   0.000381   6h24m54s   13h08m36s
+  1650   0.000468   6h27m15s   13h06m14s
+   R2 at epoch 1650:  train 0.9995   validation 0.9990  [raw 0.9985]   (gap +0.0004, lr 5e-06)  <- best, saved
+  1660   0.000349   6h29m34s   13h03m50s
+  1670   0.000342   6h31m52s   13h01m24s
+  1680   0.000385   6h34m13s   12h59m04s
+  1690   0.000368   6h36m33s   12h56m42s
+  1700   0.000363   6h38m56s   12h54m25s
+   R2 at epoch 1700:  train 0.9995   validation 0.9990  [raw 0.9990]   (gap +0.0005, lr 5e-06)  <- best, saved
+  1710   0.000444   6h41m16s   12h52m03s
+  1720   0.000333   6h43m36s   12h49m39s
+  1730   0.000360   6h46m00s   12h47m24s
+  1740   0.000365   6h48m21s   12h45m04s
+  1750   0.000342   6h50m40s   12h42m41s
+   R2 at epoch 1750:  train 0.9995   validation 0.9990  [raw 0.9990]   (gap +0.0005, lr 5e-06)  <- best, saved
+  1760   0.000338   6h53m03s   12h40m24s
+  1770   0.000362   6h55m24s   12h38m04s
+  1780   0.000335   6h57m45s   12h35m42s
+  1790   0.000335   7h00m08s   12h33m25s
+  1800   0.000339   7h02m28s   12h31m03s
+   R2 at epoch 1800:  train 0.9995   validation 0.9991  [raw 0.9975]   (gap +0.0005, lr 5e-06)  <- best, saved
+  1810   0.000303   7h04m49s   12h28m43s
+  1820   0.000413   7h07m10s   12h26m23s
+  1830   0.000313   7h09m32s   12h24m04s
+  1840   0.000378   7h11m51s   12h21m40s
+  1850   0.000363   7h14m12s   12h19m19s
+   R2 at epoch 1850:  train 0.9995   validation 0.9991  [raw 0.9989]   (gap +0.0005, lr 5e-06)  <- best, saved
+  1860   0.000319   7h16m32s   12h16m57s
+  1870   0.000317   7h18m52s   12h14m35s
+  1880   0.000366   7h21m14s   12h12m16s
+  1890   0.000322   7h23m34s   12h09m54s
+  1900   0.000293   7h25m55s   12h07m33s
+   R2 at epoch 1900:  train 0.9995   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 5e-06)  <- best, saved
+  1910   0.000324   7h28m18s   12h05m16s
+  1920   0.000303   7h30m38s   12h02m53s
+  1930   0.000320   7h32m57s   12h00m30s
+  1940   0.000324   7h35m18s   11h58m09s
+  1950   0.000325   7h37m39s   11h55m49s
+   R2 at epoch 1950:  train 0.9996   validation 0.9991  [raw 0.9990]   (gap +0.0005, lr 5e-06)
+  1960   0.000327   7h39m59s   11h53m26s
+  1970   0.000302   7h42m18s   11h51m03s
+  1980   0.000329   7h44m38s   11h48m42s
+  1990   0.000366   7h47m01s   11h46m24s
+  2000   0.000294   7h49m24s   11h44m06s
+   R2 at epoch 2000:  train 0.9996   validation 0.9991  [raw 0.9990]   (gap +0.0005, lr 5e-06)  <- best, saved
+  2010   0.000322   7h51m46s   11h41m47s
+  2020   0.000276   7h54m06s   11h39m25s
+  2030   0.000406   7h56m27s   11h37m05s
+  2040   0.000283   7h58m49s   11h34m45s
+  2050   0.000340   8h01m09s   11h32m23s
+   R2 at epoch 2050:  train 0.9996   validation 0.9991  [raw 0.9988]   (gap +0.0005, lr 5e-06)
+  2060   0.000391   8h03m29s   11h30m01s
+  2070   0.000307   8h05m48s   11h27m38s
+  2080   0.000311   8h08m09s   11h25m18s
+  2090   0.000295   8h10m29s   11h22m56s
+  2100   0.000347   8h12m49s   11h20m34s
+   R2 at epoch 2100:  train 0.9996   validation 0.9991  [raw 0.9987]   (gap +0.0005, lr 5e-06)  <- best, saved
+   validation R2 flat for 300 epochs -> learning rate cut to 2.5e-06
+  2110   0.000243   8h15m12s   11h18m15s
+  2120   0.000263   8h17m36s   11h15m59s
+  2130   0.000240   8h19m54s   11h13m35s
+  2140   0.000246   8h22m12s   11h11m10s
+  2150   0.000249   8h24m31s   11h08m46s
+   R2 at epoch 2150:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)  <- best, saved
+  2160   0.000239   8h26m50s   11h06m24s
+  2170   0.000249   8h29m11s   11h04m03s
+  2180   0.000259   8h31m31s   11h01m41s
+  2190   0.000237   8h33m51s   10h59m20s
+  2200   0.000246   8h36m10s   10h56m56s
+   R2 at epoch 2200:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)  <- best, saved
+  2210   0.000233   8h38m30s   10h54m35s
+  2220   0.000236   8h40m52s   10h52m15s
+  2230   0.000246   8h43m13s   10h49m55s
+  2240   0.000228   8h45m35s   10h47m35s
+  2250   0.000225   8h47m53s   10h45m11s
+   R2 at epoch 2250:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)
+  2260   0.000247   8h50m13s   10h42m49s
+  2270   0.000222   8h52m34s   10h40m29s
+  2280   0.000231   8h54m52s   10h38m06s
+  2290   0.000233   8h57m13s   10h35m44s
+  2300   0.000244   8h59m32s   10h33m22s
+   R2 at epoch 2300:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)  <- best, saved
+  2310   0.000226   9h01m53s   10h31m01s
+  2320   0.000237   9h04m13s   10h28m40s
+  2330   0.000233   9h06m34s   10h26m19s
+  2340   0.000213   9h08m52s   10h23m56s
+  2350   0.000230   9h11m12s   10h21m34s
+   R2 at epoch 2350:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)  <- best, saved
+  2360   0.000251   9h13m34s   10h19m14s
+  2370   0.000219   9h15m54s   10h16m53s
+  2380   0.000217   9h18m15s   10h14m33s
+  2390   0.000224   9h20m35s   10h12m12s
+  2400   0.000222   9h22m57s   10h09m52s
+   R2 at epoch 2400:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 2.5e-06)  <- best, saved
+   validation R2 flat for 300 epochs -> learning rate cut to 1.3e-06
+  2410   0.000207   9h25m17s   10h07m30s
+  2420   0.000206   9h27m38s   10h05m10s
+  2430   0.000207   9h29m59s   10h02m49s
+  2440   0.000206   9h32m20s   10h00m28s
+  2450   0.000204   9h34m40s   9h58m08s
+   R2 at epoch 2450:  train 0.9996   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 1.3e-06)
+  2460   0.000203   9h36m59s   9h55m45s
+  2470   0.000205   9h39m18s   9h53m23s
+  2480   0.000203   9h41m38s   9h51m01s
+  2490   0.000202   9h43m57s   9h48m39s
+  2500   0.000201   9h46m18s   9h46m18s
+   R2 at epoch 2500:  train 0.9997   validation 0.9991  [raw 0.9992]   (gap +0.0005, lr 1.3e-06)
+  2510   0.000200   9h48m39s   9h43m58s
+  2520   0.000197   9h51m02s   9h41m39s
+  2530   0.000202   9h53m22s   9h39m17s
+  2540   0.000199   9h55m43s   9h36m57s
+  2550   0.000196   9h58m03s   9h34m36s
+   R2 at epoch 2550:  train 0.9997   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 1.3e-06)  <- best, saved
+  2560   0.000196   10h00m25s   9h32m16s
+  2570   0.000194   10h02m46s   9h29m55s
+  2580   0.000199   10h05m05s   9h27m33s
+  2590   0.000197   10h07m27s   9h25m14s
+  2600   0.000202   10h09m48s   9h22m54s
+   R2 at epoch 2600:  train 0.9997   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 1.3e-06)  <- best, saved
+  2610   0.000194   10h12m10s   9h20m34s
+  2620   0.000197   10h14m31s   9h18m13s
+  2630   0.000194   10h16m51s   9h15m52s
+  2640   0.000195   10h19m10s   9h13m30s
+  2650   0.000198   10h21m30s   9h11m09s
+   R2 at epoch 2650:  train 0.9997   validation 0.9991  [raw 0.9991]   (gap +0.0005, lr 1.3e-06)  <- best, saved
+  2660   0.000195   10h23m51s   9h08m48s
+  2670   0.000191   10h26m15s   9h06m30s
+  2680   0.000196   10h28m34s   9h04m08s
+  2690   0.000190   10h30m54s   9h01m47s
+  2700   0.000192   10h33m13s   8h59m24s
+   R2 at epoch 2700:  train 0.9997   validation 0.9991  [raw 0.9992]   (gap +0.0005, lr 1.3e-06)
+   validation R2 flat for 300 epochs -> learning rate cut to 1e-06
+  2710   0.000189   10h35m34s   8h57m04s
+  2720   0.000187   10h37m54s   8h54m43s
+  2730   0.000187   10h40m16s   8h52m23s
+  2740   0.000190   10h42m37s   8h50m02s
+  2750   0.000187   10h44m58s   8h47m42s
+   R2 at epoch 2750:  train 0.9997   validation 0.9991  [raw 0.9990]   (gap +0.0005, lr 1e-06)
+  2760   0.000186   10h47m20s   8h45m22s
+  2770   0.000186   10h49m42s   8h43m02s
+  2780   0.000187   10h52m02s   8h40m41s
+  2790   0.000186   10h54m24s   8h38m22s
+  2800   0.000187   10h56m45s   8h36m01s
+   R2 at epoch 2800:  train 0.9997   validation 0.9991  [raw 0.9991]   (gap +0.0006, lr 1e-06)
+   EARLY STOP: validation R2 not better by 0.0001 for 1000 epochs (best 0.9991 at epoch 2650)
+
+==============================================================================
+Early-stopped at epoch 2800 after 10h56m45s
+final loss            0.000187
+best loss             0.000185
+best validation R2    0.9991 at epoch 2650   -> results_si_cps4_b3/mgn_best_val.pt
+Model saved to results_si_cps4_b3/multi_geometry_mgn.pt
+multi_geometry_mgn.pt = the best-validation weights (epoch 2650)
+
+next:  bash scripts/b3_cps4.sh curves     bash scripts/b3_cps4.sh compare
+==============================================================================
+
+==================================================================================
+2026-10-26 00:55   3/5  evaluation with the best-epoch model (results_si_cps4_b3/mgn_best_val.pt)
+==================================================================================
+NOTE: Arial is not installed - the figures use Liberation Sans instead. To get Arial:
+      sudo apt install ttf-mscorefonts-installer
+      (or copy C:\Windows\Fonts\arial*.ttf to ~/.local/share/fonts/ - see scripts/plot_style.py)
+unseen_loads   data/si_cps4/unseen_loads            81 files
+unseen_interp  data/si_cps4/unseen_interp          207 files
+unseen_extrap  data/si_cps4/unseen_extrap          115 files
+rebuilding the normalisation from data/si_cps4/dataset_si_cps4_aug20.pt (540 training cases, target Kt = stress / load) ...
+MGN using: cuda
+Node types found:
+  applied_load: 16660
+  fixed: 16660
+  free: 90240
+  hole: 65000
+  interior: 1944440
+  Total: 2133000
+==============================================================================
+checkpoint   results_si_cps4_b3/mgn_best_val.pt  ->  best weights: epoch 2650, training loss 1.975e-04, Run B3 (SCP features, Kt target), load input OFF
+device       cuda    edge augmentation 20% (seed 0)   prediction = mean of 8 random-edge draws
+trained on   10-55, 65-110 MPa
+test loads   8, 60, 130 MPa
+figures      font Liberation Sans, 300 dpi, png
+output       results_si_cps4_b3/unseen_eval_v2_draws8
+==============================================================================
+    25/403 files   22 s
+    50/403 files   45 s
+    75/403 files   66 s
+   100/403 files   74 s
+   125/403 files   79 s
+   150/403 files   83 s
+   175/403 files   89 s
+   200/403 files   94 s
+   225/403 files   100 s
+   250/403 files   105 s
+   275/403 files   110 s
+   300/403 files   115 s
+   325/403 files   121 s
+   350/403 files   127 s
+   375/403 files   132 s
+   400/403 files   137 s
+   403/403 files   137 s
+
+test              files   mean R2    median     worst  worst case                  mean|peak err|   mean NRMSE
+----------------------------------------------------------------------------------------------------------------
+unseen_loads         81    0.9997    0.9998    0.9989  R_H12 @ 60                            0.2%        0.68%
+unseen_interp       207    0.9956    0.9989    0.9692  P7 @ 100                              1.5%        2.47%
+unseen_extrap       115    0.7180    0.9674   -0.2354  E_H8 @ 110                           15.4%       17.59%
+
+UNSEEN LOADS - R2 per geometry
+  geometry                             8 MPa      60 MPa     130 MPa
+  E_H1  (a/b=1)                       0.9998      0.9998      0.9998
+  E_H1p25  (a/b=1.25)                 0.9998      0.9998      0.9998
+  E_H2  (a/b=2)                       0.9997      0.9997      0.9997
+  E_H2p5  (a/b=2.5)                   0.9997      0.9997      0.9997
+  E_H4  (a/b=4)                       0.9996      0.9996      0.9996
+  E_H6  (a/b=6)                       0.9995      0.9995      0.9995
+  E_V1p25  (b/a=1.25)                 0.9998      0.9998      0.9998
+  E_V2  (b/a=2)                       0.9999      0.9999      0.9999
+  E_V2p5  (b/a=2.5)                   0.9999      0.9999      0.9999
+  E_V4  (b/a=4)                       0.9999      0.9999      0.9999
+  E_V6  (b/a=6)                       1.0000      1.0000      1.0000
+  R_W64  (a=64 b=64)                  0.9998      0.9998      0.9998
+  R_W56  (a=56 b=64)                  0.9998      0.9998      0.9998
+  R_W40  (a=40 b=64)                  0.9999      0.9999      0.9999
+  R_W32  (a=32 b=64)                  0.9998      0.9998      0.9998
+  R_W20  (a=20 b=64)                  0.9999      0.9999      0.9999
+  R_W12  (a=12 b=64)                  0.9999      0.9999      0.9999
+  R_H56  (a=64 b=56)                  0.9998      0.9998      0.9998
+  R_H40  (a=64 b=40)                  0.9997      0.9997      0.9997
+  R_H32  (a=64 b=32)                  0.9997      0.9997      0.9997
+  R_H20  (a=64 b=20)                  0.9993      0.9993      0.9993
+  R_H12  (a=64 b=12)                  0.9989      0.9989      0.9989
+  P10  (n=10)                         0.9996      0.9996      0.9996
+  P9  (n=9)                           0.9996      0.9996      0.9996
+  P8  (n=8)                           0.9997      0.9997      0.9997
+  P6  (n=6)                           0.9997      0.9997      0.9997
+  P5  (n=5)                           0.9997      0.9997      0.9997
+
+UNSEEN GEOMETRIES (interpolation) - R2 at the test loads
+  geometry                             8 MPa      60 MPa     130 MPa
+  E_H1p5  (a/b=1.5)                   0.9985      0.9985      0.9985
+  E_H5  (a/b=5)                       0.9993      0.9993      0.9993
+  E_V1p5  (b/a=1.5)                   0.9987      0.9987      0.9987
+  E_V5  (b/a=5)                       0.9989      0.9989      0.9989
+  R_W48  (a=48 b=64)                  0.9993      0.9993      0.9993
+  R_W16  (a=16 b=64)                  0.9992      0.9992      0.9992
+  R_H48  (a=64 b=48)                  0.9995      0.9995      0.9995
+  R_H16  (a=64 b=16)                  0.9979      0.9979      0.9979
+  P7  (n=7)                           0.9692      0.9692      0.9692
+
+UNSEEN GEOMETRIES (extrapolation) - R2 at the test loads
+  geometry                             8 MPa      60 MPa     130 MPa
+  E_H8  (a/b=8)                      -0.2354     -0.2354     -0.2354
+  E_V8  (b/a=8)                       0.9674      0.9674      0.9674
+  R_W8  (a=8 b=64)                    0.9907      0.9907      0.9907
+  R_H8  (a=64 b=8)                    0.9804      0.9804      0.9804
+  P3  (n=3)                           0.8868      0.8868      0.8868
+
+scatter plots ...
+
+wrote        results_si_cps4_b3/unseen_eval_v2_draws8/metrics_all.csv
+             results_si_cps4_b3/unseen_eval_v2_draws8/summary_*.png, scatter_grid_*.png, scatter_overlay_*.png
+             246 contour plots in results_si_cps4_b3/unseen_eval_v2_draws8/contours
+             123 single scatter plots in results_si_cps4_b3/unseen_eval_v2_draws8/scatter
+time         165 s
+
+==================================================================================
+2026-10-26 00:58   4/5  fit check with the best-epoch model
+==================================================================================
+NOTE: Arial is not installed - the figures use Liberation Sans instead. To get Arial:
+      sudo apt install ttf-mscorefonts-installer
+      (or copy C:\Windows\Fonts\arial*.ttf to ~/.local/share/fonts/ - see scripts/plot_style.py)
+
+LOSS CURVE  (results_si_cps4_b3/loss_log.csv)
+  epochs logged              2800
+  loss at epoch 1            8.298e-01   (training fit R2 ~ 0.17021)
+  loss at epoch 100          2.493e-02   (training fit R2 ~ 0.97507)
+  loss at epoch 1000         1.018e-03   (training fit R2 ~ 0.99898)
+  loss at epoch 2000         2.941e-04   (training fit R2 ~ 0.99971)
+  loss at epoch 2800         1.870e-04   (training fit R2 ~ 0.99981)
+  lowest loss                1.847e-04 at epoch 2788
+  mean of last 500 epochs vs the 500 before: 31.0 % lower
+  -> STILL IMPROVING: more epochs (or a higher lr) could still help = not fully trained
+
+R2 VS EPOCH  (train and validation, mean R2 per file; from r2_log.csv)
+     epoch     train R2       val R2        gap     train loss       val loss
+         0     -0.02433     -0.01218   -0.01215      9.078e-01      7.192e-01
+       350      0.99579      0.99664   -0.00086      2.922e-03      2.187e-03
+       700      0.99841      0.99845   -0.00004      9.941e-04      8.962e-04
+      1050      0.99905      0.99884   +0.00021      5.514e-04      6.578e-04
+      1400      0.99933      0.99892   +0.00041      3.722e-04      6.318e-04
+      1750      0.99951      0.99904   +0.00047      2.649e-04      5.532e-04
+      2100      0.99959      0.99910   +0.00049      2.138e-04      5.189e-04
+      2450      0.99965      0.99911   +0.00053      1.815e-04      5.066e-04
+      2650      0.99967      0.99913   +0.00054      1.711e-04      4.983e-04   <- best validation
+      2800      0.99968      0.99912   +0.00055      1.649e-04      5.004e-04
+  wrote results_si_cps4_b3/fit_check/r2_vs_epoch.png
+
+CURVE VERDICT
+  best validation R2 0.9991 at epoch 2650 of 2800; last: train 0.9997, validation 0.9991 (gap +0.0006)
+  no clear downturn of the validation curve at the end -> no over-fitting trend.
+rebuilding the normalisation from data/si_cps4/dataset_si_cps4_aug20.pt (540 training cases, target Kt = stress / load) ...
+MGN using: cuda
+Node types found:
+  applied_load: 16660
+  fixed: 16660
+  free: 90240
+  hole: 65000
+  interior: 1944440
+  Total: 2133000
+
+model   best weights: epoch 2650, training loss 1.975e-04, Run B3 (SCP features, Kt target), load input OFF
+train   540 cases from data/si_cps4/dataset_si_cps4_aug20.pt,  prediction = mean of 8 random-edge draw(s)
+  train 60/540
+  train 120/540
+  train 180/540
+  train 240/540
+  train 300/540
+  train 360/540
+  train 420/540
+  train 480/540
+  train 540/540
+val     80 files from data/si_cps4/val
+  validation 60/80
+  validation 80/80
+
+FIT LADDER   (test levels from results_si_cps4_b3/unseen_eval_v2_draws8)
+  level                                         files   mean R2    median     worst  worst case               mean|peak err|    RMSE/peak
+  ------------------------------------------------------------------------------------------------------------------------------------------
+  train  (seen geometry, seen load)               540    0.9997    0.9998    0.9989  R_H12 @ 15                       0.21%        0.16%
+  validation  (new geometry, training loads)       80    0.9991    0.9990    0.9986  R_W24 @ 45                       0.73%        0.30%
+  unseen loads  (seen geometry)                    81    0.9997    0.9998    0.9989  R_H12 @ 8                        0.21%        0.16%
+  unseen geometry - interpolation                 207    0.9956    0.9989    0.9692  P7 @ 8                           1.52%        0.45%
+  unseen geometry - EXTRAPOLATION                 115    0.7180    0.9674   -0.2354  E_H8 @ 8                        15.36%        3.73%
+
+VERDICT
+  training fit is good (train mean R2 0.9997, mean |peak err| 0.2 %) -> no underfitting.
+  generalisation gap to new shapes inside the range is small (validation: R2 drop 0.001, peak error x3.4) -> no meaningful overfitting.
+  no clear downturn of the validation curve at the end -> no over-fitting trend.
+  EXTRAPOLATION GAP: shapes outside the training range are worse (worst: E_H8 @ 8). This is missing data coverage, not overfitting.
+
+wrote results_si_cps4_b3/fit_check
+
+==================================================================================
+2026-10-26 01:01   5/5  comparison with the other runs
+==================================================================================
+
+run          best val    epoch   last val  typical val       drop     last gap   epochs
+B2             0.9936     1050     0.9821       0.9757     0.0116      +0.0152     3200
+B3             0.9991     2650     0.9991       0.9991     0.0000      +0.0006     2800
+
+typical val = median validation R2 over the second half of the run (a single best point can be a lucky spike)
+drop = best validation R2 - last validation R2  (over-fitting shows as a large drop)
+gap  = train R2 - validation R2 at the last epoch
+
+wrote results_si_cps4_b3/fit_check/compare_runs.png
+
+==================================================================================
+2026-10-26 01:01   DONE - results:
+==================================================================================
+  best validation R2    0.9991 at epoch 2650   -> results_si_cps4_b3/mgn_best_val.pt
+  level            files   mean R2  worst R2  mean |peak error|
+  train              540    0.9997    0.9989  0.2 %
+  validation          80    0.9991    0.9986  0.7 %
+  unseen_loads        81    0.9997    0.9989  0.2 %
+  unseen_interp      207    0.9956    0.9692  1.5 %
+  unseen_extrap      115    0.7180   -0.2354  15.4 %
+  metrics (every test case)   : results_si_cps4_b3/unseen_eval_v2_draws8/metrics_all.csv
+  contour plots (HD)          : results_si_cps4_b3/unseen_eval_v2_draws8/contours/<set>/<shape>__<load>.png and _zoom.png
+  scatter, one per case       : results_si_cps4_b3/unseen_eval_v2_draws8/scatter/<set>/<shape>__<load>.png
+  scatter, all together       : results_si_cps4_b3/unseen_eval_v2_draws8/scatter_grid_*.png, scatter_overlay_*.png
+  summaries                   : results_si_cps4_b3/unseen_eval_v2_draws8/summary_*.png
+  fit check                   : results_si_cps4_b3/fit_check/
+  before-training check       : results_si_cps4_b3/scp_check/
